@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Hill: Aprendiendo HTML</title>
+    
+    <!-- FAVICON -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231a1a1a'/><rect x='10' y='10' width='80' height='80' fill='none' stroke='%23b89b7b' stroke-width='3'/><text x='50' y='68' text-anchor='middle' font-family='monospace' font-size='50' font-weight='bold' fill='%23b89b7b' filter='url(%23glow)'><tspan>S</tspan><tspan fill='%236a4a3a'>H</tspan></text><defs><filter id='glow'><feGaussianBlur stdDeviation='2' result='coloredBlur'/><feMerge><feMergeNode in='coloredBlur'/><feMergeNode in='SourceGraphic'/></feMerge></filter></defs></svg>">
+    
+    <!-- Enlace al archivo CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Contenedor del juego -->
+    <div id="game-container">
+        <!-- Barra de navegación superior -->
+        <nav id="game-nav">
+            <div id="level-info">Nivel: <span id="level-display">1</span></div>
+            <div id="score-info">Puntuación: <span id="score-display">0</span></div>
+            <div id="accessibility-controls">
+                <button id="btn-autism-mode" aria-label="Activar modo serenidad" title="Reduce estímulos visuales y sonidos fuertes">
+                    🌿 Modo Serenidad
+                </button>
+                <button id="btn-epilepsy-mode" aria-label="Activar modo descanso" title="Elimina animaciones y parpadeos">
+                    🌙 Modo Descanso
+                </button>
+                <button id="btn-manual" aria-label="Abrir manual de ayuda">
+                    📖 Manual de Ayuda
+                </button>
+            </div>
+        </nav>
+
+        <!-- Área principal del juego -->
+        <main id="game-area">
+            <div id="story-text">
+                <p id="narrative">🌫️ La niebla de Silent Hill oculta conocimientos antiguos de HTML... Debes completar los 5 rituales de código para disiparla.</p>
+            </div>
+            <div id="task-container">
+                <!-- Aquí se cargarán las tareas dinámicamente con JavaScript -->
+            </div>
+            <div id="interaction-area">
+                <input type="text" id="answer-input" placeholder="Escribe tu respuesta HTML..." aria-label="Campo de respuesta">
+                <button id="submit-answer">Enviar</button>
+                <button id="next-level" style="display: none;">Siguiente Nivel</button>
+            </div>
+            <div id="feedback-message"></div>
+        </main>
+
+        <!-- Panel del Manual (oculto por defecto) -->
+        <div id="manual-panel" style="display: none;">
+            <h2>📖 Manual de Ayuda</h2>
+            <p>Bienvenido a "Silent Hill: Aprendiendo HTML". Tu misión es resolver acertijos sobre HTML para avanzar.</p>
+            
+            <h3>🌟 Modos de Accesibilidad:</h3>
+            <ul>
+                <li><strong>🌿 Modo Serenidad:</strong> Reduce los colores brillantes y los sonidos fuertes para crear un entorno más calmado. Ideal si prefieres una experiencia más suave.</li>
+                <li><strong>🌙 Modo Descanso:</strong> Elimina todas las animaciones y parpadeos. Perfecto si necesitas un entorno más estable y tranquilo.</li>
+            </ul>
+            
+            <h3>🎮 Controles del Juego:</h3>
+            <ul>
+                <li>Tu <strong>puntuación</strong> se guarda automáticamente durante la sesión.</li>
+                <li>Las <strong>llaves de progreso</strong> se guardan en cookies para que puedas continuar donde lo dejaste.</li>
+                <li>Escribe tu respuesta en el campo de texto y presiona "Enviar" o la tecla "Enter".</li>
+            </ul>
+            
+            <h3>📚 Los 5 Niveles HTML + Misión Extra:</h3>
+            <ol>
+                <li><strong>🏚️ La Estructura Olvidada:</strong> Etiquetas básicas de HTML</li>
+                <li><strong>🔗 El Misterio de los Enlaces:</strong> Atributo href</li>
+                <li><strong>🖼️ La Imagen Perdida:</strong> Atributos src y alt</li>
+                <li><strong>📜 El Listado Encantado:</strong> Listas ordenadas y no ordenadas</li>
+                <li><strong>📝 El Formulario del Pueblo:</strong> Inputs y formularios</li>
+                <li><strong>🌫️ Misión Extra: El Código Origen:</strong> HTML semántico</li>
+            </ol>
+            <button id="close-manual">Cerrar Manual</button>
+        </div>
+    </div>
+
+    <!-- Enlace al archivo JavaScript -->
+    <!--<script src="script.js"></script> NO USADO EN ESTA ETAPA-->
+</body>
+</html>

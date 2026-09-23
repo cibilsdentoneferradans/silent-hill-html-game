@@ -1,0 +1,513 @@
+/* ==============================================
+   ESTILOS BASE - Silent Hill: Aprendiendo HTML
+   ============================================== */
+
+/* Estilos Generales */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    margin: 0;
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #1a1a1a;
+    color: #d4c9a8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-image: radial-gradient(circle, #2a2a2a 0%, #0f0f0f 100%);
+}
+
+#game-container {
+    width: 90%;
+    max-width: 950px;
+    background-color: rgba(30, 30, 30, 0.92);
+    border: 2px solid #5a4d3a;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+/* ==============================================
+   NAVEGACIÓN
+   ============================================== */
+
+#game-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #5a4d3a;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+#game-nav div {
+    font-size: 1.1rem;
+    background: #2a2a2a;
+    padding: 6px 15px;
+    border-radius: 20px;
+    border-left: 3px solid #b89b7b;
+}
+
+#level-info, #score-info {
+    font-weight: bold;
+    color: #d4c9a8;
+}
+
+#level-info span, #score-info span {
+    color: #b89b7b;
+}
+
+/* ==============================================
+   BOTONES DE ACCESIBILIDAD
+   ============================================== */
+
+#accessibility-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+#accessibility-controls button {
+    background: #3a3a3a;
+    border: 1px solid #7a6b5a;
+    color: #d4c9a8;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    margin: 0 2px;
+}
+
+#accessibility-controls button:hover {
+    background: #5a4d3a;
+    border-color: #b89b7b;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+#accessibility-controls button:active {
+    transform: scale(0.95);
+}
+
+/* Estado activo de los botones */
+#btn-autism-mode.activado {
+    background: #4a6a5a;
+    border-color: #8aba9a;
+    color: #ffffff;
+}
+
+#btn-epilepsy-mode.activado {
+    background: #4a5a7a;
+    border-color: #8aaaba;
+    color: #ffffff;
+}
+
+/* ==============================================
+   ÁREA PRINCIPAL DEL JUEGO
+   ============================================== */
+
+#game-area {
+    margin-top: 20px;
+    min-height: 380px;
+    background: #1f1f1f;
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid #3a3a3a;
+}
+
+#story-text {
+    font-style: italic;
+    color: #b89b7b;
+    text-shadow: 0 0 15px rgba(184, 155, 123, 0.2);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed #3a3a3a;
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+#task-container {
+    padding: 15px 0;
+    font-size: 1.15rem;
+    line-height: 1.8;
+    min-height: 120px;
+}
+
+#task-container .level-header {
+    margin-bottom: 10px;
+}
+
+#task-container h3 {
+    color: #b89b7b;
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    text-shadow: 0 0 10px rgba(184, 155, 123, 0.1);
+}
+
+#task-container .code-snippet {
+    background: #0d0d0d;
+    padding: 15px 20px;
+    border-radius: 8px;
+    border-left: 4px solid #b89b7b;
+    margin: 10px 0;
+    font-family: 'Courier New', monospace;
+}
+
+#task-container .code-snippet pre {
+    margin: 0;
+    color: #d4c9a8;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+#task-container ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#task-container li {
+    background: #2a2a2a;
+    margin: 8px 0;
+    padding: 12px 16px;
+    border-radius: 5px;
+    border-left: 4px solid #b89b7b;
+}
+
+/* ==============================================
+   ÁREA DE INTERACCIÓN
+   ============================================== */
+
+#interaction-area {
+    margin-top: 25px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+#answer-input {
+    flex: 2;
+    min-width: 200px;
+    padding: 12px 18px;
+    background: #2a2a2a;
+    border: 2px solid #5a4d3a;
+    border-radius: 25px;
+    color: #d4c9a8;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+#answer-input:focus {
+    outline: none;
+    border-color: #b89b7b;
+    box-shadow: 0 0 20px rgba(184, 155, 123, 0.15);
+}
+
+#answer-input::placeholder {
+    color: #6a5a4a;
+}
+
+#submit-answer, #next-level {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 25px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+#submit-answer {
+    background: #3a5a4a;
+}
+
+#submit-answer:hover {
+    background: #4a7a5a;
+    transform: scale(1.03);
+}
+
+#next-level {
+    background: #7a6b5a;
+}
+
+#next-level:hover {
+    background: #9a8b7a;
+    transform: scale(1.03);
+}
+
+/* ==============================================
+   MENSAJES DE FEEDBACK
+   ============================================== */
+
+#feedback-message {
+    margin-top: 20px;
+    padding: 14px 18px;
+    border-radius: 8px;
+    background: #2a2a2a;
+    border-left: 5px solid #b89b7b;
+    min-height: 50px;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* ==============================================
+   PANEL DEL MANUAL
+   ============================================== */
+
+#manual-panel {
+    position: fixed;
+    top: 5%;
+    left: 5%;
+    width: 90%;
+    max-width: 800px;
+    max-height: 85vh;
+    background: #1a1a1a;
+    border: 3px solid #b89b7b;
+    border-radius: 15px;
+    padding: 35px;
+    z-index: 1000;
+    overflow-y: auto;
+    color: #d4c9a8;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.95);
+}
+
+#manual-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+#manual-panel::-webkit-scrollbar-track {
+    background: #2a2a2a;
+    border-radius: 4px;
+}
+
+#manual-panel::-webkit-scrollbar-thumb {
+    background: #b89b7b;
+    border-radius: 4px;
+}
+
+#manual-panel h2 {
+    color: #b89b7b;
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #3a3a3a;
+    padding-bottom: 12px;
+}
+
+#manual-panel h3 {
+    color: #b89b7b;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+#manual-panel ul, #manual-panel ol {
+    padding-left: 25px;
+    margin: 10px 0;
+}
+
+#manual-panel li {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+#manual-panel p {
+    line-height: 1.6;
+    margin: 10px 0;
+}
+
+#close-manual {
+    display: block;
+    margin: 30px auto 0;
+    padding: 12px 40px;
+    background: #5a4d3a;
+    border: none;
+    border-radius: 30px;
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+#close-manual:hover {
+    background: #7a6b5a;
+    transform: scale(1.05);
+}
+
+/* ==============================================
+   PANTALLA DE VICTORIA
+   ============================================== */
+
+.victory-container {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.victory-container h2 {
+    color: #b89b7b;
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+
+.victory-container ul {
+    display: inline-block;
+    text-align: left;
+    margin: 15px auto;
+}
+
+.victory-container ul li {
+    background: #2a2a2a;
+    padding: 10px 18px;
+    margin: 6px 0;
+    border-radius: 5px;
+    border-left: 4px solid #4a7a5a;
+}
+
+/* ==============================================
+   MODOS DE ACCESIBILIDAD
+   ============================================== */
+
+/* --- MODO SERENIDAD (antes Modo Autismo) --- */
+body.autism-mode {
+    filter: saturate(0.7) contrast(0.85);
+}
+
+body.autism-mode #game-container {
+    background-color: #1e1e1e;
+    border-color: #6a6a6a;
+}
+
+body.autism-mode #game-nav div {
+    background: #252525;
+    border-left-color: #8a8a8a;
+}
+
+body.autism-mode #task-container li {
+    background: #252525;
+    border-left-color: #8a8a8a;
+}
+
+body.autism-mode #story-text {
+    color: #aaaaaa;
+    text-shadow: none;
+}
+
+body.autism-mode #manual-panel {
+    background: #1e1e1e;
+    border-color: #6a6a6a;
+}
+
+/* --- MODO DESCANSO (antes Modo Epilepsia) --- */
+body.epilepsy-mode * {
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+}
+
+body.epilepsy-mode #submit-answer:hover,
+body.epilepsy-mode #next-level:hover,
+body.epilepsy-mode #accessibility-controls button:hover {
+    transform: none !important;
+}
+
+body.epilepsy-mode #accessibility-controls button {
+    transition: none !important;
+}
+
+body.epilepsy-mode #answer-input:focus {
+    box-shadow: none !important;
+}
+
+/* ==============================================
+   RESPONSIVE
+   ============================================== */
+
+@media (max-width: 768px) {
+    #game-container {
+        padding: 15px;
+        width: 95%;
+    }
+    
+    #game-nav {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    #game-nav div {
+        text-align: center;
+        font-size: 1rem;
+    }
+    
+    #accessibility-controls {
+        justify-content: center;
+    }
+    
+    #accessibility-controls button {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+    }
+    
+    #game-area {
+        padding: 15px;
+        min-height: 300px;
+    }
+    
+    #interaction-area {
+        flex-direction: column;
+    }
+    
+    #answer-input {
+        width: 100%;
+        min-width: unset;
+    }
+    
+    #submit-answer, #next-level {
+        width: 100%;
+    }
+    
+    #manual-panel {
+        padding: 20px;
+        width: 95%;
+        left: 2.5%;
+        top: 2.5%;
+        max-height: 90vh;
+    }
+    
+    #manual-panel h2 {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #game-container {
+        padding: 10px;
+    }
+    
+    #accessibility-controls button {
+        font-size: 0.75rem;
+        padding: 5px 10px;
+    }
+    
+    #task-container {
+        font-size: 1rem;
+    }
+    
+    #task-container h3 {
+        font-size: 1.1rem;
+    }
+}

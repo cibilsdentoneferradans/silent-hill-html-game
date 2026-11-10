@@ -423,7 +423,7 @@ body {
    MODOS DE ACCESIBILIDAD
    ============================================== */
 
-/* --- MODO SERENIDAD (antes Modo Autismo) --- */
+/* --- MODO SERENIDAD --- */
 body.autism-mode {
     filter: saturate(0.7) contrast(0.85);
 }
@@ -453,7 +453,7 @@ body.autism-mode #manual-panel {
     border-color: #6a6a6a;
 }
 
-/* --- MODO DESCANSO (antes Modo Epilepsia) --- */
+/* --- MODO DESCANSO --- */
 body.epilepsy-mode * {
     animation-duration: 0s !important;
     animation-iteration-count: 1 !important;

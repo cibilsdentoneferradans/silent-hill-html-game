@@ -298,7 +298,7 @@ const levels = {
         task: "Escribe el nombre de la etiqueta para el 'cuerpo' (body) del documento.",
         answer: "body",
         hint: "💡 Pista: Empieza con 'b' y define el contenido visible de la página.",
-        key: "HTML_BODY",
+        key: "HTML_BODY"
         // 🎬 VIDEO explicativo del nivel
         //video: "https://www.youtube.com/watch?v=bkGTBVM02vU",
         // 🖼️ IMAGEN asociada al nivel

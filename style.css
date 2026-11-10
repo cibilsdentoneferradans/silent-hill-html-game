@@ -18,7 +18,12 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-image: radial-gradient(circle, #2a2a2a 0%, #0f0f0f 100%);
+    background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHBt8GnpxEz8NR6YRxZMewZlHH415T8bTSGfNLnqeKUo0wish8E5MmPo4&s=10');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-color: #1a1a1a; /* color de respaldo si la imagen no carga */
 }
 
 #game-container {

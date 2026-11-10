@@ -23,7 +23,7 @@ body {
     background-position: center;
     background-attachment: fixed;
     background-repeat: no-repeat;
-    /*background-color: #1a1a1a; /* color de respaldo si la imagen no carga */
+    background-color: #1a1a1a; /* color de respaldo si la imagen no carga */
 }
 
 #game-container {

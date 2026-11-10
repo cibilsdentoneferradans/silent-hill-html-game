@@ -24,6 +24,12 @@ const closeManualBtn = document.getElementById('close-manual');
 const btnManual = document.getElementById('btn-manual');
 const btnAutism = document.getElementById('btn-autism-mode');
 const btnEpilepsy = document.getElementById('btn-epilepsy-mode');
+//Imágenes y videos por pregunta
+const levelImage = document.getElementById('level-image');
+const levelImageContainer = document.getElementById('level-image-container');
+const levelVideo = document.getElementById('level-video');
+const levelVideoContainer = document.getElementById('level-video-container');
+const levelVideoSource = levelVideo.querySelector('source');
 
 // ==============================================
 // SISTEMA DE SONIDOS (Web Audio API)
@@ -292,7 +298,11 @@ const levels = {
         task: "Escribe el nombre de la etiqueta para el 'cuerpo' (body) del documento.",
         answer: "body",
         hint: "💡 Pista: Empieza con 'b' y define el contenido visible de la página.",
-        key: "HTML_BODY"
+        key: "HTML_BODY",
+        // 🎬 VIDEO explicativo del nivel
+        video: "https://www.youtube.com/watch?v=bkGTBVM02vU",
+        // 🖼️ IMAGEN asociada al nivel
+        image: "https://upanama.educativa.org/archivos/repositorio/6000/6207/html/html_sig.PNG"
     },
     2: {
         title: "🔗 El Misterio de los Enlaces",

@@ -38,6 +38,17 @@
             </div>
             <div id="task-container">
                 <!-- Aquí se cargarán las tareas dinámicamente con JavaScript -->
+                <!-- 🖼️ IMAGEN DEL NIVEL (se carga dinámicamente) -->
+                <div id="level-image-container">
+                    <img id="level-image" src="" alt="Imagen del nivel" style="display: none;">
+                </div>
+                <!-- 🎬 VIDEO DEL NIVEL (se carga dinámicamente) -->
+                <div id="level-video-container">
+                    <video id="level-video" controls style="display: none;">
+                    <source src="" type="video/mp4">
+                        Tu navegador no soporta video HTML5.
+                    </video>
+                </div>
             </div>
             <div id="interaction-area">
                 <input type="text" id="answer-input" placeholder="Escribe tu respuesta HTML..." aria-label="Campo de respuesta">

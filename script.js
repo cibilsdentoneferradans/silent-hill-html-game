@@ -8,6 +8,7 @@ let score = 0;
 const totalLevels = 6; // 5 normales + 1 extra
 let levelKey = '';
 let audioContext = null;
+let gameCompleted = false;
 
 // --- Elementos DOM ---
 const levelDisplay = document.getElementById('level-display');
@@ -45,7 +46,6 @@ function playSound(type) {
             if (!audioContext) return;
         }
         
-        // Reanudar el contexto si está suspendido
         if (audioContext.state === 'suspended') {
             audioContext.resume();
         }
@@ -57,14 +57,14 @@ function playSound(type) {
 
         switch(type) {
             case 'correct':
-                oscillator.frequency.value = 523.25; // Do5
+                oscillator.frequency.value = 523.25;
                 gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
                 oscillator.start();
                 setTimeout(() => {
-                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime); // Mi5
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime);
                 }, 150);
                 setTimeout(() => {
-                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime); // Sol5
+                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime);
                 }, 300);
                 setTimeout(() => {
                     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
@@ -82,7 +82,6 @@ function playSound(type) {
                 }, 400);
                 break;
             case 'levelup':
-                // Melodía de logro (arpegio)
                 const notes = [523.25, 587.33, 659.25, 783.99];
                 notes.forEach((freq, i) => {
                     const osc = audioContext.createOscillator();
@@ -97,7 +96,6 @@ function playSound(type) {
                 });
                 break;
             case 'ambient':
-                // Sonido de niebla (ruido suave)
                 const bufferSize = 2 * audioContext.sampleRate;
                 const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
                 const data = buffer.getChannelData(0);
@@ -122,12 +120,114 @@ function playSound(type) {
 }
 
 // ==============================================
-// SISTEMA DE PUNTUACIÓN Y COOKIES
+// SISTEMA DE PERSISTENCIA (localStorage + Cookies)
 // ==============================================
+
+// Guardar todo el estado del juego
+function saveGameState() {
+    try {
+        const gameState = {
+            currentLevel: currentLevel,
+            score: score,
+            gameCompleted: gameCompleted,
+            // Guardar qué niveles están completados
+            completedLevels: []
+        };
+        
+        // Recopilar niveles completados
+        for (let i = 1; i <= totalLevels; i++) {
+            if (isLevelCompleted(i)) {
+                gameState.completedLevels.push(i);
+            }
+        }
+        
+        // Guardar en localStorage
+        localStorage.setItem('silentHillGameState', JSON.stringify(gameState));
+        localStorage.setItem('silentHillHTMLScore', score.toString());
+        
+        // Guardar nivel actual en una cookie separada (respaldo)
+        document.cookie = `silentHillCurrentLevel=${currentLevel}; path=/; max-age=86400`;
+        
+        console.log('💾 Estado del juego guardado:', gameState);
+    } catch (e) {
+        console.log('Error guardando el estado:', e);
+    }
+}
+
+// Cargar todo el estado del juego
+function loadGameState() {
+    try {
+        const savedState = localStorage.getItem('silentHillGameState');
+        if (savedState) {
+            const gameState = JSON.parse(savedState);
+            
+            // Restaurar puntuación
+            score = gameState.score || 0;
+            scoreDisplay.textContent = score;
+            
+            // Restaurar nivel actual
+            if (gameState.gameCompleted) {
+                gameCompleted = true;
+                showGameComplete();
+                return true;
+            }
+            
+            // Verificar si el nivel actual está completado (para avanzar)
+            let targetLevel = gameState.currentLevel || 1;
+            
+            // Asegurarse de que no esté en un nivel ya completado
+            while (isLevelCompleted(targetLevel) && targetLevel <= totalLevels) {
+                targetLevel++;
+            }
+            
+            if (targetLevel > totalLevels) {
+                gameCompleted = true;
+                showGameComplete();
+                return true;
+            }
+            
+            currentLevel = targetLevel;
+            levelDisplay.textContent = currentLevel;
+            
+            // Cargar el nivel
+            loadLevel(currentLevel);
+            return true;
+        }
+        
+        // Si no hay estado guardado, intentar recuperar de cookies (backup)
+        const cookieLevel = getCookie('silentHillCurrentLevel');
+        if (cookieLevel) {
+            const level = parseInt(cookieLevel, 10);
+            if (!isNaN(level) && level >= 1 && level <= totalLevels) {
+                currentLevel = level;
+                levelDisplay.textContent = currentLevel;
+                loadLevel(currentLevel);
+                return true;
+            }
+        }
+        
+        return false;
+    } catch (e) {
+        console.log('Error cargando el estado:', e);
+        return false;
+    }
+}
+
+// Función para obtener una cookie por nombre
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+        return parts.pop().split(';').shift();
+    }
+    return null;
+}
 
 function saveScore() {
     try {
         localStorage.setItem('silentHillHTMLScore', score.toString());
+        // También guardar en el estado completo
+        saveGameState();
     } catch (e) {
         console.log('No se pudo guardar la puntuación');
     }
@@ -152,6 +252,8 @@ function saveLevelKey(level) {
     try {
         document.cookie = `${key}=true; path=/; max-age=86400`; // 1 día
         levelKey = key;
+        // Guardar el estado completo
+        saveGameState();
     } catch (e) {
         console.log('No se pudo guardar la cookie');
     }
@@ -160,7 +262,20 @@ function saveLevelKey(level) {
 function isLevelCompleted(level) {
     const key = `html_level_${level}_completed`;
     try {
-        return document.cookie.split('; ').some(row => row.startsWith(`${key}=true`));
+        // Primero verificar en cookies
+        const cookieExists = document.cookie.split('; ').some(row => row.startsWith(`${key}=true`));
+        if (cookieExists) return true;
+        
+        // Si no está en cookies, verificar en localStorage (backup)
+        const savedState = localStorage.getItem('silentHillGameState');
+        if (savedState) {
+            const gameState = JSON.parse(savedState);
+            if (gameState.completedLevels && gameState.completedLevels.includes(level)) {
+                return true;
+            }
+        }
+        
+        return false;
     } catch (e) {
         return false;
     }
@@ -226,23 +341,41 @@ const levels = {
 // ==============================================
 
 function loadLevel(levelNum) {
+    // Si el juego ya está completado, mostrar final
+    if (gameCompleted) {
+        showGameComplete();
+        return;
+    }
+    
     // Si el nivel ya está completado, pasar al siguiente
     if (isLevelCompleted(levelNum) && levelNum <= totalLevels) {
-        if (levelNum === totalLevels) {
+        if (levelNum >= totalLevels) {
+            gameCompleted = true;
             showGameComplete();
             return;
         }
-        loadLevel(levelNum + 1);
+        // Saltar al siguiente nivel no completado
+        for (let i = levelNum + 1; i <= totalLevels; i++) {
+            if (!isLevelCompleted(i)) {
+                loadLevel(i);
+                return;
+            }
+        }
+        // Si todos están completados
+        gameCompleted = true;
+        showGameComplete();
         return;
     }
 
     if (levelNum > totalLevels) {
+        gameCompleted = true;
         showGameComplete();
         return;
     }
 
     const levelData = levels[levelNum];
     if (!levelData) {
+        gameCompleted = true;
         showGameComplete();
         return;
     }
@@ -272,6 +405,9 @@ function loadLevel(levelNum) {
     submitBtn.style.display = 'inline-block';
     answerInput.style.display = 'inline-block';
     answerInput.focus();
+
+    // Guardar el estado actual
+    saveGameState();
 
     // Reproducir sonido ambiente
     playSound('ambient');
@@ -307,6 +443,24 @@ function checkAnswer() {
         saveScore();
         saveLevelKey(currentLevel);
 
+        // Verificar si todos los niveles están completados
+        let allCompleted = true;
+        for (let i = 1; i <= totalLevels; i++) {
+            if (!isLevelCompleted(i)) {
+                allCompleted = false;
+                break;
+            }
+        }
+        
+        if (allCompleted) {
+            gameCompleted = true;
+            nextBtn.textContent = '🎉 Ver Final';
+            nextBtn.style.display = 'inline-block';
+            submitBtn.style.display = 'none';
+            saveGameState();
+            return;
+        }
+
         if (currentLevel < totalLevels) {
             nextBtn.style.display = 'inline-block';
             nextBtn.textContent = '➡️ Siguiente Nivel';
@@ -317,6 +471,9 @@ function checkAnswer() {
             nextBtn.style.display = 'inline-block';
             submitBtn.style.display = 'none';
         }
+        
+        // Guardar estado después de completar el nivel
+        saveGameState();
     } else {
         // Respuesta incorrecta
         playSound('wrong');
@@ -328,16 +485,39 @@ function checkAnswer() {
 }
 
 function nextLevel() {
-    if (currentLevel === totalLevels) {
+    // Verificar si todos los niveles están completados
+    let allCompleted = true;
+    for (let i = 1; i <= totalLevels; i++) {
+        if (!isLevelCompleted(i)) {
+            allCompleted = false;
+            break;
+        }
+    }
+    
+    if (allCompleted || currentLevel >= totalLevels) {
+        gameCompleted = true;
         showGameComplete();
         return;
     }
+    
     playSound('levelup');
-    const next = currentLevel + 1;
-    loadLevel(next);
+    
+    // Buscar el siguiente nivel no completado
+    let next = currentLevel + 1;
+    while (next <= totalLevels && isLevelCompleted(next)) {
+        next++;
+    }
+    
+    if (next > totalLevels) {
+        gameCompleted = true;
+        showGameComplete();
+    } else {
+        loadLevel(next);
+    }
 }
 
 function showGameComplete() {
+    gameCompleted = true;
     playSound('levelup');
     narrative.textContent = '🌫️ La niebla se disipa lentamente... Has dominado los fundamentos de HTML. ¡Eres un verdadero maestro del código!';
     taskContainer.innerHTML = `
@@ -355,6 +535,9 @@ function showGameComplete() {
             </ul>
             <p style="margin-top: 20px; font-style: italic; color: #b89b7b;">"El conocimiento es la luz que disipa la niebla"</p>
             <p style="margin-top: 10px;">🌿 🌙 ¡Gracias por jugar, desarrollador!</p>
+            <button id="btn-restart" style="margin-top: 20px; padding: 12px 30px; background: #4a5a7a; border: none; border-radius: 25px; color: white; font-size: 1rem; cursor: pointer; font-family: inherit;">
+                🔄 Jugar de nuevo
+            </button>
         </div>
     `;
     answerInput.style.display = 'none';
@@ -362,6 +545,51 @@ function showGameComplete() {
     nextBtn.style.display = 'none';
     feedback.innerHTML = '🎓 ¡Excelente trabajo! Has completado todos los niveles.';
     feedback.style.borderLeftColor = '#b89b7b';
+    
+    // Guardar estado completado
+    saveGameState();
+    
+    // Añadir evento para reiniciar
+    const restartBtn = document.getElementById('btn-restart');
+    if (restartBtn) {
+        restartBtn.addEventListener('click', resetGame);
+    }
+}
+
+// ==============================================
+// REINICIAR JUEGO
+// ==============================================
+
+function resetGame() {
+    // Limpiar todo el progreso
+    try {
+        // Limpiar localStorage
+        localStorage.removeItem('silentHillGameState');
+        localStorage.removeItem('silentHillHTMLScore');
+        
+        // Limpiar cookies
+        for (let i = 1; i <= totalLevels; i++) {
+            document.cookie = `html_level_${i}_completed=; path=/; max-age=0`;
+        }
+        document.cookie = `silentHillCurrentLevel=; path=/; max-age=0`;
+        
+        // Resetear variables
+        currentLevel = 1;
+        score = 0;
+        gameCompleted = false;
+        levelDisplay.textContent = 1;
+        scoreDisplay.textContent = 0;
+        
+        // Recargar el primer nivel
+        loadLevel(1);
+        
+        feedback.innerHTML = '🔄 Juego reiniciado. ¡Buena suerte!';
+        feedback.style.borderLeftColor = '#b89b7b';
+        
+        console.log('🔄 Juego reiniciado completamente');
+    } catch (e) {
+        console.log('Error al reiniciar:', e);
+    }
 }
 
 // ==============================================
@@ -397,14 +625,12 @@ closeManualBtn.addEventListener('click', () => {
     manualPanel.style.display = 'none';
 });
 
-// Cerrar manual al hacer clic fuera del panel
 window.addEventListener('click', (e) => {
     if (e.target === manualPanel) {
         manualPanel.style.display = 'none';
     }
 });
 
-// Cerrar manual con tecla ESC
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && manualPanel.style.display === 'block') {
         manualPanel.style.display = 'none';
@@ -412,10 +638,10 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ==============================================
-// MODOS DE ACCESIBILIDAD
+// MODOS DE ACCESIBILIDAD (Nombres amables)
 // ==============================================
 
-// --- Modo Serenidad (antes Modo Autismo) ---
+// --- Modo Serenidad ---
 btnAutism.addEventListener('click', () => {
     document.body.classList.toggle('autism-mode');
     const isActive = document.body.classList.contains('autism-mode');
@@ -432,7 +658,7 @@ btnAutism.addEventListener('click', () => {
     }
 });
 
-// --- Modo Descanso (antes Modo Epilepsia) ---
+// --- Modo Descanso ---
 btnEpilepsy.addEventListener('click', () => {
     document.body.classList.toggle('epilepsy-mode');
     const isActive = document.body.classList.contains('epilepsy-mode');
@@ -440,7 +666,6 @@ btnEpilepsy.addEventListener('click', () => {
     btnEpilepsy.textContent = isActive ? '🌙 Modo Descanso Activado' : '🌙 Modo Descanso';
     
     if (isActive) {
-        // Eliminar todas las animaciones y transiciones
         document.querySelectorAll('*').forEach(el => {
             el.style.animation = 'none';
             el.style.transition = 'none';
@@ -448,7 +673,6 @@ btnEpilepsy.addEventListener('click', () => {
         feedback.innerHTML = '🌙 Modo Descanso activado. Se han eliminado las animaciones y parpadeos para mayor tranquilidad.';
         feedback.style.borderLeftColor = '#6a8a9a';
     } else {
-        // Restaurar animaciones eliminando el estilo inline
         document.querySelectorAll('*').forEach(el => {
             el.style.animation = '';
             el.style.transition = '';
@@ -464,41 +688,40 @@ btnEpilepsy.addEventListener('click', () => {
 // ==============================================
 
 function init() {
-    // Cargar puntuación guardada
-    loadScore();
+    console.log('🌫️ Silent Hill: Aprendiendo HTML - Iniciando...');
     
-    // Determinar en qué nivel empezar
-    let startLevel = 1;
-    for (let i = 1; i <= totalLevels; i++) {
-        if (isLevelCompleted(i)) {
-            startLevel = i + 1;
-        } else {
-            break;
-        }
-    }
+    // Intentar cargar el estado guardado
+    const loaded = loadGameState();
     
-    // Si todos los niveles están completados, mostrar final
-    if (startLevel > totalLevels) {
-        showGameComplete();
-    } else {
-        loadLevel(startLevel);
+    // Si no se pudo cargar, empezar desde el principio
+    if (!loaded) {
+        console.log('📚 No se encontró progreso guardado. Iniciando desde el nivel 1.');
+        // Cargar puntuación (por si acaso)
+        loadScore();
+        // Cargar nivel 1
+        loadLevel(1);
     }
     
     // Sonido ambiente cada 15 segundos (excepto en modo descanso)
     setInterval(() => {
-        if (!document.body.classList.contains('epilepsy-mode')) {
+        if (!document.body.classList.contains('epilepsy-mode') && !gameCompleted) {
             playSound('ambient');
         }
     }, 15000);
     
-    console.log('🌫️ Silent Hill: Aprendiendo HTML - Juego iniciado');
-    console.log('📚 Niveles disponibles:', Object.keys(levels).length);
+    console.log('✅ Juego inicializado correctamente');
+    console.log(`📊 Nivel actual: ${currentLevel}, Puntuación: ${score}`);
     console.log('🌿 Modo Serenidad disponible');
     console.log('🌙 Modo Descanso disponible');
 }
 
 // Iniciar el juego cuando la página esté completamente cargada
 window.addEventListener('DOMContentLoaded', init);
+
+// También guardar al cerrar la página
+window.addEventListener('beforeunload', () => {
+    saveGameState();
+});
 
 // ==============================================
 // MANEJO DE ERRORES GLOBALES

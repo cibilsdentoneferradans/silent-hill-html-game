@@ -301,9 +301,9 @@ const levels = {
         hint: "💡 Pista: Empieza con 'b' y define el contenido visible de la página.",
         key: "HTML_BODY"
         // Video explicativo del nivel.
-        video: "https://www.youtube.com/watch?v=bkGTBVM02vU",
+        //video: "https://www.youtube.com/watch?v=bkGTBVM02vU",
         // Imagen asociada al nivel.
-        image: "https://upanama.educativa.org/archivos/repositorio/6000/6207/html/html_sig.PNG"
+        //image: "https://upanama.educativa.org/archivos/repositorio/6000/6207/html/html_sig.PNG"
     },
     2: {
         title: "🔗 El Misterio de los Enlaces",

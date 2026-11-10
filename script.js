@@ -24,13 +24,6 @@ const closeManualBtn = document.getElementById('close-manual');
 const btnManual = document.getElementById('btn-manual');
 const btnAutism = document.getElementById('btn-autism-mode');
 const btnEpilepsy = document.getElementById('btn-epilepsy-mode');
-//ELEMENTOS NUEVOS PARA LOS VIDEOS E IMÁGENES
-const levelImage = document.getElementById('level-image');
-const levelImageContainer = document.getElementById('level-image-container');
-const levelVideo = document.getElementById('level-video');
-const levelVideoContainer = document.getElementById('level-video-container');
-const levelVideoSource = levelVideo.querySelector('source');
-
 
 // ==============================================
 // SISTEMA DE SONIDOS (Web Audio API)
@@ -52,7 +45,7 @@ function playSound(type) {
             initAudio();
             if (!audioContext) return;
         }
-
+        
         if (audioContext.state === 'suspended') {
             audioContext.resume();
         }
@@ -140,21 +133,21 @@ function saveGameState() {
             // Guardar qué niveles están completados
             completedLevels: []
         };
-
+        
         // Recopilar niveles completados
         for (let i = 1; i <= totalLevels; i++) {
             if (isLevelCompleted(i)) {
                 gameState.completedLevels.push(i);
             }
         }
-
+        
         // Guardar en localStorage
         localStorage.setItem('silentHillGameState', JSON.stringify(gameState));
         localStorage.setItem('silentHillHTMLScore', score.toString());
-
+        
         // Guardar nivel actual en una cookie separada (respaldo)
         document.cookie = `silentHillCurrentLevel=${currentLevel}; path=/; max-age=86400`;
-
+        
         console.log('💾 Estado del juego guardado:', gameState);
     } catch (e) {
         console.log('Error guardando el estado:', e);
@@ -167,40 +160,40 @@ function loadGameState() {
         const savedState = localStorage.getItem('silentHillGameState');
         if (savedState) {
             const gameState = JSON.parse(savedState);
-
+            
             // Restaurar puntuación
             score = gameState.score || 0;
             scoreDisplay.textContent = score;
-
+            
             // Restaurar nivel actual
             if (gameState.gameCompleted) {
                 gameCompleted = true;
                 showGameComplete();
                 return true;
             }
-
+            
             // Verificar si el nivel actual está completado (para avanzar)
             let targetLevel = gameState.currentLevel || 1;
-
+            
             // Asegurarse de que no esté en un nivel ya completado
             while (isLevelCompleted(targetLevel) && targetLevel <= totalLevels) {
                 targetLevel++;
             }
-
+            
             if (targetLevel > totalLevels) {
                 gameCompleted = true;
                 showGameComplete();
                 return true;
             }
-
+            
             currentLevel = targetLevel;
             levelDisplay.textContent = currentLevel;
-
+            
             // Cargar el nivel
             loadLevel(currentLevel);
             return true;
         }
-
+        
         // Si no hay estado guardado, intentar recuperar de cookies (backup)
         const cookieLevel = getCookie('silentHillCurrentLevel');
         if (cookieLevel) {
@@ -212,7 +205,7 @@ function loadGameState() {
                 return true;
             }
         }
-
+        
         return false;
     } catch (e) {
         console.log('Error cargando el estado:', e);
@@ -272,7 +265,7 @@ function isLevelCompleted(level) {
         // Primero verificar en cookies
         const cookieExists = document.cookie.split('; ').some(row => row.startsWith(`${key}=true`));
         if (cookieExists) return true;
-
+        
         // Si no está en cookies, verificar en localStorage (backup)
         const savedState = localStorage.getItem('silentHillGameState');
         if (savedState) {
@@ -281,7 +274,7 @@ function isLevelCompleted(level) {
                 return true;
             }
         }
-
+        
         return false;
     } catch (e) {
         return false;
@@ -300,10 +293,6 @@ const levels = {
         answer: "body",
         hint: "💡 Pista: Empieza con 'b' y define el contenido visible de la página.",
         key: "HTML_BODY"
-        // Video explicativo del nivel.
-        //video: "https://www.youtube.com/watch?v=bkGTBVM02vU",
-        // Imagen asociada al nivel.
-        //image: "https://upanama.educativa.org/archivos/repositorio/6000/6207/html/html_sig.PNG"
     },
     2: {
         title: "🔗 El Misterio de los Enlaces",
@@ -357,7 +346,7 @@ function loadLevel(levelNum) {
         showGameComplete();
         return;
     }
-
+    
     // Si el nivel ya está completado, pasar al siguiente
     if (isLevelCompleted(levelNum) && levelNum <= totalLevels) {
         if (levelNum >= totalLevels) {
@@ -394,7 +383,7 @@ function loadLevel(levelNum) {
     currentLevel = levelNum;
     levelDisplay.textContent = currentLevel;
     narrative.textContent = `📜 ${levelData.story}`;
-
+    
     // Mostrar la tarea con formato mejorado
     taskContainer.innerHTML = `
         <div class="level-header">
@@ -404,11 +393,11 @@ function loadLevel(levelNum) {
             </div>
         </div>
     `;
-
+    
     if (levelData.hint) {
         taskContainer.innerHTML += `<p style="color: #8a7a6a; font-size: 0.95rem; margin-top: 12px; padding: 10px; background: #1a1a1a; border-radius: 5px;">${levelData.hint}</p>`;
     }
-
+    
     answerInput.value = '';
     feedback.textContent = '';
     feedback.style.borderLeftColor = '#b89b7b';
@@ -462,7 +451,7 @@ function checkAnswer() {
                 break;
             }
         }
-
+        
         if (allCompleted) {
             gameCompleted = true;
             nextBtn.textContent = '🎉 Ver Final';
@@ -482,7 +471,7 @@ function checkAnswer() {
             nextBtn.style.display = 'inline-block';
             submitBtn.style.display = 'none';
         }
-
+        
         // Guardar estado después de completar el nivel
         saveGameState();
     } else {
@@ -504,21 +493,21 @@ function nextLevel() {
             break;
         }
     }
-
+    
     if (allCompleted || currentLevel >= totalLevels) {
         gameCompleted = true;
         showGameComplete();
         return;
     }
-
+    
     playSound('levelup');
-
+    
     // Buscar el siguiente nivel no completado
     let next = currentLevel + 1;
     while (next <= totalLevels && isLevelCompleted(next)) {
         next++;
     }
-
+    
     if (next > totalLevels) {
         gameCompleted = true;
         showGameComplete();
@@ -556,10 +545,10 @@ function showGameComplete() {
     nextBtn.style.display = 'none';
     feedback.innerHTML = '🎓 ¡Excelente trabajo! Has completado todos los niveles.';
     feedback.style.borderLeftColor = '#b89b7b';
-
+    
     // Guardar estado completado
     saveGameState();
-
+    
     // Añadir evento para reiniciar
     const restartBtn = document.getElementById('btn-restart');
     if (restartBtn) {
@@ -571,32 +560,33 @@ function showGameComplete() {
 // REINICIAR JUEGO
 // ==============================================
 
+//Abrir la consola del navegador y ejecutar el comando que llama a la función:
 function resetGame() {
     // Limpiar todo el progreso
     try {
         // Limpiar localStorage
         localStorage.removeItem('silentHillGameState');
         localStorage.removeItem('silentHillHTMLScore');
-
+        
         // Limpiar cookies
         for (let i = 1; i <= totalLevels; i++) {
             document.cookie = `html_level_${i}_completed=; path=/; max-age=0`;
         }
         document.cookie = `silentHillCurrentLevel=; path=/; max-age=0`;
-
+        
         // Resetear variables
         currentLevel = 1;
         score = 0;
         gameCompleted = false;
         levelDisplay.textContent = 1;
         scoreDisplay.textContent = 0;
-
+        
         // Recargar el primer nivel
         loadLevel(1);
-
+        
         feedback.innerHTML = '🔄 Juego reiniciado. ¡Buena suerte!';
         feedback.style.borderLeftColor = '#b89b7b';
-
+        
         console.log('🔄 Juego reiniciado completamente');
     } catch (e) {
         console.log('Error al reiniciar:', e);
@@ -659,7 +649,7 @@ btnAutism.addEventListener('click', () => {
     btnAutism.classList.toggle('activado', isActive);
     btnAutism.textContent = isActive ? '🌿 Modo Serenidad Activado' : '🌿 Modo Serenidad';
     playSound('ambient');
-
+    
     if (isActive) {
         feedback.innerHTML = '🌿 Modo Serenidad activado. Los colores y sonidos se han suavizado para tu comodidad.';
         feedback.style.borderLeftColor = '#6a9a7a';
@@ -675,7 +665,7 @@ btnEpilepsy.addEventListener('click', () => {
     const isActive = document.body.classList.contains('epilepsy-mode');
     btnEpilepsy.classList.toggle('activado', isActive);
     btnEpilepsy.textContent = isActive ? '🌙 Modo Descanso Activado' : '🌙 Modo Descanso';
-
+    
     if (isActive) {
         document.querySelectorAll('*').forEach(el => {
             el.style.animation = 'none';
@@ -700,10 +690,10 @@ btnEpilepsy.addEventListener('click', () => {
 
 function init() {
     console.log('🌫️ Silent Hill: Aprendiendo HTML - Iniciando...');
-
+    
     // Intentar cargar el estado guardado
     const loaded = loadGameState();
-
+    
     // Si no se pudo cargar, empezar desde el principio
     if (!loaded) {
         console.log('📚 No se encontró progreso guardado. Iniciando desde el nivel 1.');
@@ -712,14 +702,14 @@ function init() {
         // Cargar nivel 1
         loadLevel(1);
     }
-
+    
     // Sonido ambiente cada 15 segundos (excepto en modo descanso)
     setInterval(() => {
         if (!document.body.classList.contains('epilepsy-mode') && !gameCompleted) {
             playSound('ambient');
         }
     }, 15000);
-
+    
     console.log('✅ Juego inicializado correctamente');
     console.log(`📊 Nivel actual: ${currentLevel}, Puntuación: ${score}`);
     console.log('🌿 Modo Serenidad disponible');

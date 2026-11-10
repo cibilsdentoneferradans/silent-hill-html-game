@@ -300,9 +300,9 @@ const levels = {
         answer: "body",
         hint: "💡 Pista: Empieza con 'b' y define el contenido visible de la página.",
         key: "HTML_BODY"
-        // 🎬 VIDEO explicativo del nivel (mp4 o webm)
-        video: "https://www.youtube.com/watch?v=0xSPgPKJ7mo",
-        // 🖼️ IMAGEN asociada al nivel
+        // Video explicativo del nivel.
+        video: "https://www.youtube.com/watch?v=bkGTBVM02vU",
+        // Imagen asociada al nivel.
         image: "https://upanama.educativa.org/archivos/repositorio/6000/6207/html/html_sig.PNG"
     },
     2: {

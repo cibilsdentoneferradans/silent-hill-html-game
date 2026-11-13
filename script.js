@@ -5,8 +5,7 @@
 // --- Variables Globales ---
 let currentLevel = 1;
 let score = 0;
-const totalLevels = 6; // 5 normales + 1 extra
-let levelKey = '';
+const totalLevels = 6;
 let audioContext = null;
 let gameCompleted = false;
 
@@ -25,30 +24,27 @@ const btnManual = document.getElementById('btn-manual');
 const btnAutism = document.getElementById('btn-autism-mode');
 const btnEpilepsy = document.getElementById('btn-epilepsy-mode');
 
-// ==============================================
-// SISTEMA DE SONIDOS (Web Audio API)
-// ==============================================
+// --- Elementos DOM multimedia ---
+const levelImage = document.getElementById('level-image');
+const levelImageContainer = document.getElementById('level-image-container');
+const levelVideoContainer = document.getElementById('level-video-container');
+const levelVideoFrame = document.getElementById('level-video-frame');
 
+// ==============================================
+// SONIDOS (Web Audio API)
+// ==============================================
 function initAudio() {
     if (!audioContext) {
         try {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        } catch (e) {
-            console.log('Audio no soportado en este navegador');
-        }
+        } catch (e) { console.log('Audio no soportado en este navegador'); }
     }
 }
 
 function playSound(type) {
     try {
-        if (!audioContext) {
-            initAudio();
-            if (!audioContext) return;
-        }
-        
-        if (audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
+        if (!audioContext) { initAudio(); if (!audioContext) return; }
+        if (audioContext.state === 'suspended') audioContext.resume();
 
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
@@ -60,12 +56,8 @@ function playSound(type) {
                 oscillator.frequency.value = 523.25;
                 gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
                 oscillator.start();
-                setTimeout(() => {
-                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime);
-                }, 150);
-                setTimeout(() => {
-                    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime);
-                }, 300);
+                setTimeout(() => oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime), 150);
+                setTimeout(() => oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime), 300);
                 setTimeout(() => {
                     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
                     oscillator.stop(audioContext.currentTime + 0.5);
@@ -99,9 +91,7 @@ function playSound(type) {
                 const bufferSize = 2 * audioContext.sampleRate;
                 const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
                 const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    data[i] = (Math.random() * 2 - 1) * 0.015;
-                }
+                for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.015;
                 const noise = audioContext.createBufferSource();
                 noise.buffer = buffer;
                 const gainNoise = audioContext.createGain();
@@ -111,90 +101,54 @@ function playSound(type) {
                 noise.start();
                 noise.stop(audioContext.currentTime + 2);
                 break;
-            default:
-                break;
         }
-    } catch (e) {
-        console.log('Error reproduciendo audio:', e);
-    }
+    } catch (e) { console.log('Error audio:', e); }
 }
 
 // ==============================================
-// SISTEMA DE PERSISTENCIA (localStorage + Cookies)
+// PERSISTENCIA (localStorage + cookies)
 // ==============================================
-
-// Guardar todo el estado del juego
 function saveGameState() {
     try {
-        const gameState = {
-            currentLevel: currentLevel,
-            score: score,
-            gameCompleted: gameCompleted,
-            // Guardar qué niveles están completados
-            completedLevels: []
-        };
-        
-        // Recopilar niveles completados
+        const gameState = { currentLevel, score, gameCompleted, completedLevels: [] };
         for (let i = 1; i <= totalLevels; i++) {
-            if (isLevelCompleted(i)) {
-                gameState.completedLevels.push(i);
-            }
+            if (isLevelCompleted(i)) gameState.completedLevels.push(i);
         }
-        
-        // Guardar en localStorage
         localStorage.setItem('silentHillGameState', JSON.stringify(gameState));
         localStorage.setItem('silentHillHTMLScore', score.toString());
-        
-        // Guardar nivel actual en una cookie separada (respaldo)
         document.cookie = `silentHillCurrentLevel=${currentLevel}; path=/; max-age=86400`;
-        
-        console.log('💾 Estado del juego guardado:', gameState);
-    } catch (e) {
-        console.log('Error guardando el estado:', e);
-    }
+    } catch (e) { console.log('Error guardando estado:', e); }
 }
 
-// Cargar todo el estado del juego
 function loadGameState() {
     try {
         const savedState = localStorage.getItem('silentHillGameState');
         if (savedState) {
             const gameState = JSON.parse(savedState);
-            
-            // Restaurar puntuación
             score = gameState.score || 0;
             scoreDisplay.textContent = score;
-            
-            // Restaurar nivel actual
+
             if (gameState.gameCompleted) {
                 gameCompleted = true;
                 showGameComplete();
                 return true;
             }
-            
-            // Verificar si el nivel actual está completado (para avanzar)
+
             let targetLevel = gameState.currentLevel || 1;
-            
-            // Asegurarse de que no esté en un nivel ya completado
-            while (isLevelCompleted(targetLevel) && targetLevel <= totalLevels) {
-                targetLevel++;
-            }
-            
+            while (isLevelCompleted(targetLevel) && targetLevel <= totalLevels) targetLevel++;
+
             if (targetLevel > totalLevels) {
                 gameCompleted = true;
                 showGameComplete();
                 return true;
             }
-            
+
             currentLevel = targetLevel;
             levelDisplay.textContent = currentLevel;
-            
-            // Cargar el nivel
             loadLevel(currentLevel);
             return true;
         }
-        
-        // Si no hay estado guardado, intentar recuperar de cookies (backup)
+
         const cookieLevel = getCookie('silentHillCurrentLevel');
         if (cookieLevel) {
             const level = parseInt(cookieLevel, 10);
@@ -205,32 +159,22 @@ function loadGameState() {
                 return true;
             }
         }
-        
         return false;
-    } catch (e) {
-        console.log('Error cargando el estado:', e);
-        return false;
-    }
+    } catch (e) { return false; }
 }
 
-// Función para obtener una cookie por nombre
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-        return parts.pop().split(';').shift();
-    }
+    if (parts.length === 2) return parts.pop().split(';').shift();
     return null;
 }
 
 function saveScore() {
     try {
         localStorage.setItem('silentHillHTMLScore', score.toString());
-        // También guardar en el estado completo
         saveGameState();
-    } catch (e) {
-        console.log('No se pudo guardar la puntuación');
-    }
+    } catch (e) {}
 }
 
 function loadScore() {
@@ -238,53 +182,41 @@ function loadScore() {
         const saved = localStorage.getItem('silentHillHTMLScore');
         if (saved !== null) {
             score = parseInt(saved, 10);
-            if (!isNaN(score)) {
-                scoreDisplay.textContent = score;
-            }
+            if (!isNaN(score)) scoreDisplay.textContent = score;
         }
-    } catch (e) {
-        console.log('No se pudo cargar la puntuación');
-    }
+    } catch (e) {}
 }
 
 function saveLevelKey(level) {
     const key = `html_level_${level}_completed`;
     try {
-        document.cookie = `${key}=true; path=/; max-age=86400`; // 1 día
-        levelKey = key;
-        // Guardar el estado completo
+        document.cookie = `${key}=true; path=/; max-age=86400`;
         saveGameState();
-    } catch (e) {
-        console.log('No se pudo guardar la cookie');
-    }
+    } catch (e) {}
 }
 
 function isLevelCompleted(level) {
     const key = `html_level_${level}_completed`;
     try {
-        // Primero verificar en cookies
-        const cookieExists = document.cookie.split('; ').some(row => row.startsWith(`${key}=true`));
-        if (cookieExists) return true;
-        
-        // Si no está en cookies, verificar en localStorage (backup)
+        if (document.cookie.split('; ').some(row => row.startsWith(`${key}=true`))) return true;
         const savedState = localStorage.getItem('silentHillGameState');
         if (savedState) {
             const gameState = JSON.parse(savedState);
-            if (gameState.completedLevels && gameState.completedLevels.includes(level)) {
-                return true;
-            }
+            if (gameState.completedLevels && gameState.completedLevels.includes(level)) return true;
         }
-        
         return false;
-    } catch (e) {
-        return false;
-    }
+    } catch (e) { return false; }
 }
 
 // ==============================================
-// DEFINICIÓN DE NIVELES - TEMÁTICA HTML
+// DEFINICIÓN DE NIVELES
 // ==============================================
-
+// ⚠️ IMPORTANTE:
+// Reemplazá el valor de "video" con la URL de EMBED de YouTube
+// (formato: https://www.youtube.com/embed/CODIGO_DEL_VIDEO)
+// Reemplazá el valor de "image" con la URL de tu imagen.
+// Si dejás el valor vacío (""), ese bloque no se mostrará.
+// ==============================================
 const levels = {
     1: {
         title: "🏚️ La Estructura Olvidada",
@@ -292,7 +224,9 @@ const levels = {
         task: "Escribe el nombre de la etiqueta para el 'cuerpo' (body) del documento.",
         answer: "body",
         hint: "💡 Pista: Empieza con 'b' y define el contenido visible de la página.",
-        key: "HTML_BODY"
+        key: "HTML_BODY",
+        video: "https://www.youtube.com/embed/9biO4X-iCrE",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWd-5p1Q3KV88bPjdzjc3U56JCfazIlkG0NZEPZ9yIIQ&s=10"
     },
     2: {
         title: "🔗 El Misterio de los Enlaces",
@@ -300,7 +234,9 @@ const levels = {
         task: "Escribe el nombre del atributo que define la URL de un enlace.",
         answer: "href",
         hint: "💡 Pista: Empieza con 'h' y significa 'Hypertext Reference'.",
-        key: "HTML_HREF"
+        key: "HTML_HREF",
+        video: "https://www.youtube.com/embed/2brE1F0XsmI",
+        image: "https://www.loading.es/blog/wp-content/uploads/a-href-enlaces-web-768x384.jpg"
     },
     3: {
         title: "🖼️ La Imagen Perdida",
@@ -308,7 +244,9 @@ const levels = {
         task: "Escribe el nombre del atributo que especifica la fuente de la imagen.",
         answer: "src",
         hint: "💡 Pista: Es la abreviatura de 'source' (origen).",
-        key: "HTML_SRC"
+        key: "HTML_SRC",
+        video: "https://www.youtube.com/embed/hfa7_MEBw8k",
+        image: "https://i.ytimg.com/vi/YSQBsRtnxHk/maxresdefault.jpg"
     },
     4: {
         title: "📜 El Listado Encantado",
@@ -316,7 +254,9 @@ const levels = {
         task: "Escribe el nombre de la etiqueta para una lista no ordenada.",
         answer: "ul",
         hint: "💡 Pista: Son las siglas de 'Unordered List' (lista no ordenada).",
-        key: "HTML_UL"
+        key: "HTML_UL",
+        video: "https://www.youtube.com/embed/d-DsmF5L7oE",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSApo-guk-J-VbRrgWAkr0yZROGFmhxmIBJv8vvtvIxGXyEBWQtlt5RSfQt&s=10"
     },
     5: {
         title: "📝 El Formulario del Pueblo",
@@ -324,67 +264,78 @@ const levels = {
         task: "Escribe el nombre del atributo que define el tipo de input.",
         answer: "type",
         hint: "💡 Pista: Es una palabra de 4 letras que significa 'tipo' en inglés.",
-        key: "HTML_TYPE"
+        key: "HTML_TYPE",
+        video: "https://www.youtube.com/embed/xVfOOndXe0E",
+        image: "https://media.geeksforgeeks.org/wp-content/uploads/20240519124156/HTML-Input-Type-Text.png"
     },
-    6: { // Misión Extra
+    6: {
         title: "🌫️ Misión Extra: El Código Origen",
         story: "Has trascendido la niebla. Para una mejor estructura, HTML5 introduce etiquetas semánticas. ¿Qué etiqueta se usa para definir el encabezado de una página o sección?",
         task: "Escribe el nombre de la etiqueta semántica para el encabezado.",
         answer: "header",
         hint: "💡 Pista: Es una palabra en inglés que significa 'encabezado'.",
-        key: "HTML_HEADER"
+        key: "HTML_HEADER",
+        video: "https://www.youtube.com/embed/WNAGQeYYLxg",
+        image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbYmXu6s0ehEem5yrwIavJ3tdZeHAZI5UqrgBHKtIsQUAWgYGRRkmbCLk&s=10"
     }
 };
 
 // ==============================================
+// CARGAR IMAGEN Y VIDEO DEL NIVEL (cambia el DOM)
+// ==============================================
+function loadLevelMedia(levelData) {
+    // 🖼️ IMAGEN
+    if (levelData.image && levelData.image.trim() !== '') {
+        levelImage.src = levelData.image;
+        levelImage.alt = `Imagen de apoyo: ${levelData.title}`;
+        levelImageContainer.style.display = 'block';
+    } else {
+        levelImageContainer.style.display = 'none';
+        levelImage.src = '';
+    }
+
+    // 🎬 VIDEO (iframe de YouTube)
+    if (levelData.video && levelData.video.trim() !== '') {
+        // Agregamos autoplay=0 para que no se reproduzca sola
+        // y rel=0 para limitar videos relacionados
+        const separator = levelData.video.includes('?') ? '&' : '?';
+        levelVideoFrame.src = `${levelData.video}${separator}rel=0&autoplay=0`;
+        levelVideoContainer.style.display = 'block';
+    } else {
+        levelVideoFrame.src = '';
+        levelVideoContainer.style.display = 'none';
+    }
+}
+
+// ==============================================
 // FUNCIONES DEL JUEGO
 // ==============================================
-
 function loadLevel(levelNum) {
-    // Si el juego ya está completado, mostrar final
-    if (gameCompleted) {
-        showGameComplete();
-        return;
-    }
-    
-    // Si el nivel ya está completado, pasar al siguiente
+    if (gameCompleted) { showGameComplete(); return; }
+
     if (isLevelCompleted(levelNum) && levelNum <= totalLevels) {
-        if (levelNum >= totalLevels) {
-            gameCompleted = true;
-            showGameComplete();
-            return;
-        }
-        // Saltar al siguiente nivel no completado
+        if (levelNum >= totalLevels) { gameCompleted = true; showGameComplete(); return; }
         for (let i = levelNum + 1; i <= totalLevels; i++) {
-            if (!isLevelCompleted(i)) {
-                loadLevel(i);
-                return;
-            }
+            if (!isLevelCompleted(i)) { loadLevel(i); return; }
         }
-        // Si todos están completados
         gameCompleted = true;
         showGameComplete();
         return;
     }
 
-    if (levelNum > totalLevels) {
-        gameCompleted = true;
-        showGameComplete();
-        return;
-    }
+    if (levelNum > totalLevels) { gameCompleted = true; showGameComplete(); return; }
 
     const levelData = levels[levelNum];
-    if (!levelData) {
-        gameCompleted = true;
-        showGameComplete();
-        return;
-    }
+    if (!levelData) { gameCompleted = true; showGameComplete(); return; }
 
     currentLevel = levelNum;
     levelDisplay.textContent = currentLevel;
     narrative.textContent = `📜 ${levelData.story}`;
-    
-    // Mostrar la tarea con formato mejorado
+
+    // 🔄 Cargar imagen y video del nivel (cambia el DOM)
+    loadLevelMedia(levelData);
+
+    // Tarea
     taskContainer.innerHTML = `
         <div class="level-header">
             <h3>${levelData.title}</h3>
@@ -393,11 +344,11 @@ function loadLevel(levelNum) {
             </div>
         </div>
     `;
-    
+
     if (levelData.hint) {
         taskContainer.innerHTML += `<p style="color: #8a7a6a; font-size: 0.95rem; margin-top: 12px; padding: 10px; background: #1a1a1a; border-radius: 5px;">${levelData.hint}</p>`;
     }
-    
+
     answerInput.value = '';
     feedback.textContent = '';
     feedback.style.borderLeftColor = '#b89b7b';
@@ -406,19 +357,13 @@ function loadLevel(levelNum) {
     answerInput.style.display = 'inline-block';
     answerInput.focus();
 
-    // Guardar el estado actual
     saveGameState();
-
-    // Reproducir sonido ambiente
     playSound('ambient');
 }
 
 function checkAnswer() {
     const levelData = levels[currentLevel];
-    if (!levelData) {
-        feedback.textContent = '⚠️ Error: No se encontró el nivel.';
-        return;
-    }
+    if (!levelData) { feedback.textContent = '⚠️ Error: No se encontró el nivel.'; return; }
 
     const userAnswer = answerInput.value.trim().toLowerCase();
     const correctAnswer = levelData.answer.toLowerCase();
@@ -429,12 +374,10 @@ function checkAnswer() {
         return;
     }
 
-    // Normalizar respuestas (eliminar espacios extra)
     const normalizedUser = userAnswer.replace(/\s+/g, '');
     const normalizedCorrect = correctAnswer.replace(/\s+/g, '');
 
     if (normalizedUser === normalizedCorrect || userAnswer === correctAnswer) {
-        // Respuesta correcta
         playSound('correct');
         feedback.innerHTML = '✅ ¡Respuesta correcta! El conocimiento HTML se fortalece.';
         feedback.style.borderLeftColor = '#4a7a5a';
@@ -443,15 +386,11 @@ function checkAnswer() {
         saveScore();
         saveLevelKey(currentLevel);
 
-        // Verificar si todos los niveles están completados
         let allCompleted = true;
         for (let i = 1; i <= totalLevels; i++) {
-            if (!isLevelCompleted(i)) {
-                allCompleted = false;
-                break;
-            }
+            if (!isLevelCompleted(i)) { allCompleted = false; break; }
         }
-        
+
         if (allCompleted) {
             gameCompleted = true;
             nextBtn.textContent = '🎉 Ver Final';
@@ -466,16 +405,13 @@ function checkAnswer() {
             nextBtn.textContent = '➡️ Siguiente Nivel';
             submitBtn.style.display = 'none';
         } else {
-            // Último nivel completado
             nextBtn.textContent = '🎉 Ver Final';
             nextBtn.style.display = 'inline-block';
             submitBtn.style.display = 'none';
         }
-        
-        // Guardar estado después de completar el nivel
+
         saveGameState();
     } else {
-        // Respuesta incorrecta
         playSound('wrong');
         feedback.innerHTML = `❌ Respuesta incorrecta. ${levelData.hint || 'Revisa la sintaxis de HTML y vuelve a intentarlo.'}`;
         feedback.style.borderLeftColor = '#7a4a4a';
@@ -485,29 +421,22 @@ function checkAnswer() {
 }
 
 function nextLevel() {
-    // Verificar si todos los niveles están completados
     let allCompleted = true;
     for (let i = 1; i <= totalLevels; i++) {
-        if (!isLevelCompleted(i)) {
-            allCompleted = false;
-            break;
-        }
+        if (!isLevelCompleted(i)) { allCompleted = false; break; }
     }
-    
+
     if (allCompleted || currentLevel >= totalLevels) {
         gameCompleted = true;
         showGameComplete();
         return;
     }
-    
+
     playSound('levelup');
-    
-    // Buscar el siguiente nivel no completado
+
     let next = currentLevel + 1;
-    while (next <= totalLevels && isLevelCompleted(next)) {
-        next++;
-    }
-    
+    while (next <= totalLevels && isLevelCompleted(next)) next++;
+
     if (next > totalLevels) {
         gameCompleted = true;
         showGameComplete();
@@ -518,6 +447,13 @@ function nextLevel() {
 
 function showGameComplete() {
     gameCompleted = true;
+
+    // Ocultar video e imagen
+    levelVideoFrame.src = '';
+    levelVideoContainer.style.display = 'none';
+    levelImageContainer.style.display = 'none';
+    levelImage.src = '';
+
     playSound('levelup');
     narrative.textContent = '🌫️ La niebla se disipa lentamente... Has dominado los fundamentos de HTML. ¡Eres un verdadero maestro del código!';
     taskContainer.innerHTML = `
@@ -545,187 +481,131 @@ function showGameComplete() {
     nextBtn.style.display = 'none';
     feedback.innerHTML = '🎓 ¡Excelente trabajo! Has completado todos los niveles.';
     feedback.style.borderLeftColor = '#b89b7b';
-    
-    // Guardar estado completado
+
     saveGameState();
-    
-    // Añadir evento para reiniciar
+
     const restartBtn = document.getElementById('btn-restart');
-    if (restartBtn) {
-        restartBtn.addEventListener('click', resetGame);
-    }
+    if (restartBtn) restartBtn.addEventListener('click', resetGame);
 }
 
 // ==============================================
 // REINICIAR JUEGO
 // ==============================================
-
 function resetGame() {
-    // Limpiar todo el progreso
     try {
-        // Limpiar localStorage
         localStorage.removeItem('silentHillGameState');
         localStorage.removeItem('silentHillHTMLScore');
-        
-        // Limpiar cookies
         for (let i = 1; i <= totalLevels; i++) {
             document.cookie = `html_level_${i}_completed=; path=/; max-age=0`;
         }
         document.cookie = `silentHillCurrentLevel=; path=/; max-age=0`;
-        
-        // Resetear variables
+
         currentLevel = 1;
         score = 0;
         gameCompleted = false;
         levelDisplay.textContent = 1;
         scoreDisplay.textContent = 0;
-        
-        // Recargar el primer nivel
+
         loadLevel(1);
-        
         feedback.innerHTML = '🔄 Juego reiniciado. ¡Buena suerte!';
         feedback.style.borderLeftColor = '#b89b7b';
-        
-        console.log('🔄 Juego reiniciado completamente');
-    } catch (e) {
-        console.log('Error al reiniciar:', e);
-    }
+    } catch (e) { console.log('Error al reiniciar:', e); }
 }
 
 // ==============================================
 // EVENT LISTENERS
 // ==============================================
-
-// Botón enviar
 submitBtn.addEventListener('click', checkAnswer);
-
-// Tecla Enter en el campo de respuesta
 answerInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        checkAnswer();
-    }
+    if (e.key === 'Enter') { e.preventDefault(); checkAnswer(); }
 });
-
-// Botón siguiente nivel
 nextBtn.addEventListener('click', nextLevel);
 
 // ==============================================
-// MANUAL DE AYUDA
+// MANUAL
 // ==============================================
-
 btnManual.addEventListener('click', () => {
     manualPanel.style.display = 'block';
     playSound('ambient');
-    feedback.innerHTML = '📖 Manual de ayuda abierto. Aquí encontrarás toda la información que necesitas.';
+    feedback.innerHTML = '📖 Manual de ayuda abierto.';
     feedback.style.borderLeftColor = '#b89b7b';
 });
 
-closeManualBtn.addEventListener('click', () => {
-    manualPanel.style.display = 'none';
-});
+closeManualBtn.addEventListener('click', () => { manualPanel.style.display = 'none'; });
 
 window.addEventListener('click', (e) => {
-    if (e.target === manualPanel) {
-        manualPanel.style.display = 'none';
-    }
+    if (e.target === manualPanel) manualPanel.style.display = 'none';
 });
 
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && manualPanel.style.display === 'block') {
-        manualPanel.style.display = 'none';
-    }
+    if (e.key === 'Escape' && manualPanel.style.display === 'block') manualPanel.style.display = 'none';
 });
 
 // ==============================================
-// MODOS DE ACCESIBILIDAD (Nombres amables)
+// MODOS DE ACCESIBILIDAD
 // ==============================================
-
-// --- Modo Serenidad ---
 btnAutism.addEventListener('click', () => {
     document.body.classList.toggle('autism-mode');
     const isActive = document.body.classList.contains('autism-mode');
     btnAutism.classList.toggle('activado', isActive);
     btnAutism.textContent = isActive ? '🌿 Modo Serenidad Activado' : '🌿 Modo Serenidad';
     playSound('ambient');
-    
+
     if (isActive) {
-        feedback.innerHTML = '🌿 Modo Serenidad activado. Los colores y sonidos se han suavizado para tu comodidad.';
+        feedback.innerHTML = '🌿 Modo Serenidad activado. Los colores y sonidos se han suavizado.';
         feedback.style.borderLeftColor = '#6a9a7a';
     } else {
-        feedback.innerHTML = '🌿 Modo Serenidad desactivado. Volviendo a la configuración normal.';
+        feedback.innerHTML = '🌿 Modo Serenidad desactivado.';
         feedback.style.borderLeftColor = '#b89b7b';
     }
 });
 
-// --- Modo Descanso ---
 btnEpilepsy.addEventListener('click', () => {
     document.body.classList.toggle('epilepsy-mode');
     const isActive = document.body.classList.contains('epilepsy-mode');
     btnEpilepsy.classList.toggle('activado', isActive);
     btnEpilepsy.textContent = isActive ? '🌙 Modo Descanso Activado' : '🌙 Modo Descanso';
-    
+
     if (isActive) {
         document.querySelectorAll('*').forEach(el => {
             el.style.animation = 'none';
             el.style.transition = 'none';
         });
-        feedback.innerHTML = '🌙 Modo Descanso activado. Se han eliminado las animaciones y parpadeos para mayor tranquilidad.';
+        feedback.innerHTML = '🌙 Modo Descanso activado. Animaciones eliminadas.';
         feedback.style.borderLeftColor = '#6a8a9a';
     } else {
         document.querySelectorAll('*').forEach(el => {
             el.style.animation = '';
             el.style.transition = '';
         });
-        feedback.innerHTML = '🌙 Modo Descanso desactivado. Las animaciones se han restaurado.';
+        feedback.innerHTML = '🌙 Modo Descanso desactivado.';
         feedback.style.borderLeftColor = '#b89b7b';
     }
     playSound('ambient');
 });
 
 // ==============================================
-// INICIALIZACIÓN DEL JUEGO
+// INICIALIZACIÓN
 // ==============================================
-
 function init() {
     console.log('🌫️ Silent Hill: Aprendiendo HTML - Iniciando...');
-    
-    // Intentar cargar el estado guardado
+
     const loaded = loadGameState();
-    
-    // Si no se pudo cargar, empezar desde el principio
+
     if (!loaded) {
-        console.log('📚 No se encontró progreso guardado. Iniciando desde el nivel 1.');
-        // Cargar puntuación (por si acaso)
         loadScore();
-        // Cargar nivel 1
         loadLevel(1);
     }
-    
-    // Sonido ambiente cada 15 segundos (excepto en modo descanso)
+
     setInterval(() => {
         if (!document.body.classList.contains('epilepsy-mode') && !gameCompleted) {
             playSound('ambient');
         }
     }, 15000);
-    
-    console.log('✅ Juego inicializado correctamente');
-    console.log(`📊 Nivel actual: ${currentLevel}, Puntuación: ${score}`);
-    console.log('🌿 Modo Serenidad disponible');
-    console.log('🌙 Modo Descanso disponible');
 }
 
-// Iniciar el juego cuando la página esté completamente cargada
 window.addEventListener('DOMContentLoaded', init);
-
-// También guardar al cerrar la página
-window.addEventListener('beforeunload', () => {
-    saveGameState();
-});
-
-// ==============================================
-// MANEJO DE ERRORES GLOBALES
-// ==============================================
+window.addEventListener('beforeunload', () => { saveGameState(); });
 
 window.addEventListener('error', (e) => {
     console.log('⚠️ Error detectado:', e.message);
